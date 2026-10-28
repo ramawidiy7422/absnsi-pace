@@ -30,9 +30,18 @@
 <div class="card">
     <div class="card-header">
         <h6><i class="fas fa-list-alt"></i> Laporan Bulan {{ \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y') }}</h6>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <a href="{{ route('admin.laporan.rekap-bulanan', ['bulan' => $bulan, 'tahun' => $tahun]) }}" class="btn btn-sm" style="background:#6b46c1;color:white;">
-                <i class="fas fa-calendar-check"></i> Rekap Per Karyawan
+                <i class="fas fa-calendar-check"></i> Rekap Bulanan
+            </a>
+            <a href="{{ route('admin.laporan.rekap-departemen', ['bulan' => $bulan, 'tahun' => $tahun]) }}" class="btn btn-sm" style="background:#276749;color:white;">
+                <i class="fas fa-building"></i> Rekap Departemen
+            </a>
+            <a href="{{ route('admin.laporan.rekap-karyawan', ['bulan' => $bulan, 'tahun' => $tahun]) }}" class="btn btn-sm" style="background:#553c9a;color:white;">
+                <i class="fas fa-user-check"></i> Rekap Karyawan
+            </a>
+            <a href="{{ route('admin.laporan.export-csv', request()->query()) }}" class="btn btn-sm" style="background:#2f855a;color:white;">
+                <i class="fas fa-file-csv"></i> CSV
             </a>
             <a href="{{ route('admin.laporan.export-pdf', request()->query()) }}" class="btn btn-danger btn-sm" target="_blank">
                 <i class="fas fa-file-pdf"></i> PDF
@@ -40,6 +49,28 @@
             <a href="{{ route('admin.laporan.export-excel', request()->query()) }}" class="btn btn-success btn-sm">
                 <i class="fas fa-file-excel"></i> Excel
             </a>
+            <a href="{{ route('admin.laporan.keterlambatan', ['bulan'=>$bulan,'tahun'=>$tahun]) }}" class="btn btn-sm" style="background:#c53030;color:white;">
+                <i class="fas fa-user-clock"></i> Keterlambatan
+            </a>
+            <a href="{{ route('admin.laporan.trend-kehadiran') }}" class="btn btn-sm" style="background:#2b6cb0;color:white;">
+                <i class="fas fa-chart-line"></i> Trend
+            </a>
+            @if(auth()->user()->hasPermission('laporan.rekap-cuti'))
+            <a href="{{ route('admin.laporan.rekap-cuti-izin', ['bulan'=>$bulan,'tahun'=>$tahun]) }}" class="btn btn-sm" style="background:#805ad5;color:white;">
+                <i class="fas fa-calendar-times"></i> Rekap Cuti & Izin
+            </a>
+            @endif
+            @if(auth()->user()->hasPermission('laporan.lihat'))
+            <a href="{{ route('admin.laporan.pelanggaran', ['bulan'=>$bulan,'tahun'=>$tahun]) }}" class="btn btn-sm" style="background:#dd6b20;color:white;">
+                <i class="fas fa-exclamation-circle"></i> Alpha & Pelanggaran
+            </a>
+            <a href="{{ route('admin.laporan.rekap-lembur', ['bulan'=>$bulan,'tahun'=>$tahun]) }}" class="btn btn-sm" style="background:#c05621;color:white;">
+                <i class="fas fa-business-time"></i> Rekap Lembur
+            </a>
+            <a href="{{ route('admin.laporan.rekap-potongan-tunjangan', ['bulan'=>$bulan,'tahun'=>$tahun]) }}" class="btn btn-sm" style="background:#4a5568;color:white;">
+                <i class="fas fa-calculator"></i> Potongan & Tunjangan
+            </a>
+            @endif
         </div>
     </div>
     <div class="card-body">
@@ -100,10 +131,10 @@
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($a->tanggal)->format('d/m/Y') }}</td>
                         <td>
-                            <strong>{{ $a->karyawan->nama ?? '-' }}</strong><br>
-                            <small style="color:#a0aec0;">{{ $a->karyawan->nik ?? '' }}</small>
+                            <strong>{{ $a->karyawan?->nama ?? '-' }}</strong><br>
+                            <small style="color:#a0aec0;">{{ $a->karyawan?->nik ?? '' }}</small>
                         </td>
-                        <td>{{ $a->karyawan->departemen ?? '-' }}</td>
+                        <td>{{ $a->karyawan?->department?->name ?? $a->karyawan?->departemen ?? '-' }}</td>
                         <td style="font-size:12px;">{{ $a->shift->nama_shift ?? '-' }}</td>
                         <td>{{ $a->jam_masuk ?? '-' }}</td>
                         <td>{{ $a->jam_keluar ?? '-' }}</td>

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->enum('metode', ['wajah', 'qrcode', 'manual'])->default('wajah')->after('status');
         });
     }
-
     public function down(): void
+
     {
         Schema::table('absensi', function (Blueprint $table) {
             $table->dropColumn('metode');

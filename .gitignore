@@ -22,3 +22,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Data pribadi karyawan (foto wajah untuk face recognition) - jangan pernah masuk repo publik
+/python-service/wajah_karyawan
+# Virtual environment & cache Python - bisa di-generate ulang, bukan source code
+/python-service/venv
+/python-service/__pycache__
+*.pyc

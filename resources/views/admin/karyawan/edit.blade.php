@@ -22,8 +22,15 @@
             @csrf @method('PUT')
             <div class="grid-2">
                 <div class="form-group">
-                    <label>NIK *</label>
+                    <label>ID Karyawan *</label>
                     <input type="text" name="nik" class="form-control" value="{{ old('nik', $karyawan->nik) }}" required>
+                    <small style="color:#718096;">Nomor ID internal karyawan — digunakan untuk absensi & QR code (bukan NIK KTP)</small>
+                </div>
+                <div class="form-group">
+                    <label>Inisial <small style="color:#94a3b8;">(opsional)</small></label>
+                    <input type="text" name="inisial" class="form-control" value="{{ old('inisial', $karyawan->inisial) }}" placeholder="Contoh: DAA" maxlength="10"
+                        style="text-transform:uppercase;">
+                    <small style="color:#718096;">Singkatan nama, maks 10 karakter</small>
                 </div>
                 <div class="form-group">
                     <label>Nama Lengkap *</label>
@@ -31,11 +38,36 @@
                 </div>
                 <div class="form-group">
                     <label>Departemen *</label>
-                    <input type="text" name="departemen" class="form-control" value="{{ old('departemen', $karyawan->departemen) }}" required>
+                    <select name="department_id" id="dept_select" class="form-select" required onchange="filterDivisi()">
+                        <option value="">Pilih Departemen...</option>
+                        @foreach($departments as $dept)
+                            <option value="{{ $dept->id }}" {{ old('department_id', $karyawan->department_id) == $dept->id ? 'selected' : '' }}>{{ $dept->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Divisi <small style="color:#94a3b8;">(opsional)</small></label>
+                    <select name="devision_id" id="divisi_select" class="form-select">
+                        <option value="">— Pilih Divisi —</option>
+                        @foreach($devisions as $dev)
+                            <option value="{{ $dev->id }}"
+                                    data-dept="{{ $dev->department_id }}"
+                                    {{ old('devision_id', $karyawan->devision_id) == $dev->id ? 'selected' : '' }}>
+                                {{ $dev->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Jabatan *</label>
-                    <input type="text" name="jabatan" class="form-control" value="{{ old('jabatan', $karyawan->jabatan) }}" required>
+                    <select name="position_id" class="form-select" required>
+                        <option value="">Pilih Jabatan...</option>
+                        @foreach($positions as $pos)
+                            <option value="{{ $pos->id }}" {{ old('position_id', $karyawan->position_id) == $pos->id ? 'selected' : '' }}>
+                                {{ $pos->name }}@if($pos->level) — {{ $pos->level }}@endif
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Jenis Kelamin *</label>
@@ -45,12 +77,22 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>No. HP</label>
+                    <label>No. HP / WA</label>
                     <input type="text" name="no_hp" class="form-control" value="{{ old('no_hp', $karyawan->no_hp) }}">
                 </div>
                 <div class="form-group">
-                    <label>Tanggal Masuk *</label>
-                    <input type="date" name="tanggal_masuk" class="form-control" value="{{ old('tanggal_masuk', $karyawan->tanggal_masuk) }}" required>
+                    <label>Email Pribadi</label>
+                    <input type="email" name="email" class="form-control" value="{{ old('email', $karyawan->email) }}" placeholder="email@pribadi.com">
+                    <small style="color:#718096;">Email kontak karyawan</small>
+                </div>
+                <div class="form-group">
+                    <label>Pendidikan Terakhir</label>
+                    <select name="pendidikan_terakhir" class="form-select">
+                        <option value="">Pilih...</option>
+                        @foreach(['SD','SMP','SMA/SMK','D1','D2','D3','S1','S2','S3'] as $p)
+                            <option value="{{ $p }}" {{ old('pendidikan_terakhir', $karyawan->pendidikan_terakhir) == $p ? 'selected' : '' }}>{{ $p }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Shift Kerja</label>
@@ -64,16 +106,141 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
-                    <select name="status" class="form-select">
-                        <option value="aktif" {{ $karyawan->status == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                        <option value="nonaktif" {{ $karyawan->status == 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
+                    <label>Status Karyawan *</label>
+                    <select name="status" class="form-select" required>
+                        @php $curStatus = old('status', $karyawan->status); @endphp
+                        <option value="kontrak"  {{ $curStatus=='kontrak'  ? 'selected' : '' }}>Karyawan Kontrak</option>
+                        <option value="tetap"    {{ $curStatus=='tetap'    ? 'selected' : '' }}>Karyawan Tetap</option>
+                        <option value="magang"   {{ $curStatus=='magang'   ? 'selected' : '' }}>Magang</option>
+                        <option value="training" {{ $curStatus=='training' ? 'selected' : '' }}>Training</option>
+                        <option value="harian"   {{ $curStatus=='harian'   ? 'selected' : '' }}>Harian Lepas / Pocokan</option>
+                        <option value="nonaktif" {{ $curStatus=='nonaktif' ? 'selected' : '' }}>Nonaktif</option>
                     </select>
                 </div>
+
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label>Hak Akses Absensi</label>
+                    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:14px;">
+                        <div style="padding-top:2px;">
+                            <input type="hidden" name="bebas_absen" value="0">
+                            <input type="checkbox" name="bebas_absen" id="bebas_absen" value="1"
+                                {{ old('bebas_absen', $karyawan->bebas_absen) ? 'checked' : '' }}
+                                style="width:18px;height:18px;cursor:pointer;accent-color:#d97706;">
+                        </div>
+                        <div>
+                            <label for="bebas_absen" style="font-size:14px;font-weight:700;color:#92400e;cursor:pointer;text-transform:none;letter-spacing:0;">
+                                Bebas Absen (Manager ke atas)
+                            </label>
+                            <div style="font-size:12px;color:#78350f;margin-top:3px;">
+                                Jika dicentang: tidak dihitung terlambat, tidak kena alpha otomatis, dan bebas keluar jam berapa saja (pulang cepat tidak dicatat).
+                                Karyawan dengan jabatan <strong>Direktur, Plant Manager, Manager, atau Asst. Manager</strong> otomatis bebas absen meskipun tidak dicentang.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tempat Lahir</label>
+                    <input type="text" name="birth_place" class="form-control" value="{{ old('birth_place', $karyawan->birth_place) }}">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Lahir</label>
+                    <input type="date" name="birth_date" class="form-control" value="{{ old('birth_date', $karyawan->birth_date) }}">
+                </div>
+                <div class="form-group">
+                    <label>Agama</label>
+                    <select name="religion" class="form-select">
+                        <option value="">Pilih...</option>
+                        @foreach(['Islam','Kristen','Katolik','Hindu','Buddha','Konghucu'] as $agama)
+                            <option value="{{ $agama }}" {{ old('religion', $karyawan->religion) == $agama ? 'selected' : '' }}>{{ $agama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status Pernikahan</label>
+                    <select name="marital_status" class="form-select">
+                        <option value="">Pilih...</option>
+                        @foreach(['Belum Menikah','Menikah','Cerai'] as $ms)
+                            <option value="{{ $ms }}" {{ old('marital_status', $karyawan->marital_status) == $ms ? 'selected' : '' }}>{{ $ms }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Tanggungan</label>
+                    <input type="number" name="jumlah_tanggungan" class="form-control"
+                           value="{{ old('jumlah_tanggungan', $karyawan->jumlah_tanggungan ?? 0) }}" min="0" max="20">
+                </div>
             </div>
+
+            <div class="form-group">
+                <label>Golongan Darah</label>
+                <select name="golongan_darah" class="form-select">
+                    <option value="">-- Tidak Diketahui --</option>
+                    @foreach(['A','B','AB','O','A+','A-','B+','B-','AB+','AB-','O+','O-'] as $gol)
+                    <option value="{{ $gol }}" {{ old('golongan_darah', $karyawan->golongan_darah) == $gol ? 'selected' : '' }}>{{ $gol }}</option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Alamat</label>
                 <textarea name="alamat" class="form-control" rows="3">{{ old('alamat', $karyawan->alamat) }}</textarea>
+            </div>
+
+            {{-- Kontak Darurat --}}
+            <div style="background:#fff5f5;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #fed7d7;">
+                <div style="font-size:12px;font-weight:700;color:#c53030;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
+                    <i class="fas fa-phone-alt"></i> Kontak Darurat
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Nama Kontak</label>
+                        <input type="text" name="kontak_darurat_nama" class="form-control" maxlength="100"
+                               value="{{ old('kontak_darurat_nama', $karyawan->kontak_darurat_nama) }}" placeholder="Nama lengkap">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Hubungan</label>
+                        <select name="kontak_darurat_hubungan" class="form-select">
+                            <option value="">-- Pilih --</option>
+                            @foreach(['Suami','Istri','Orang Tua','Anak','Saudara','Teman','Lainnya'] as $hub)
+                            <option value="{{ $hub }}" {{ old('kontak_darurat_hubungan', $karyawan->kontak_darurat_hubungan) == $hub ? 'selected' : '' }}>{{ $hub }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>No. HP Kontak</label>
+                        <input type="text" name="kontak_darurat_no_hp" class="form-control" maxlength="20"
+                               value="{{ old('kontak_darurat_no_hp', $karyawan->kontak_darurat_no_hp) }}" placeholder="08xx-xxxx-xxxx">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Rekening Bank --}}
+            <div style="background:#f0fff4;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #9ae6b4;">
+                <div style="font-size:12px;font-weight:700;color:#276749;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">
+                    <i class="fas fa-university"></i> Rekening Bank (untuk transfer gaji)
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Nama Bank</label>
+                        <select name="bank_nama" class="form-select">
+                            <option value="">-- Pilih Bank --</option>
+                            @foreach(['BCA','BRI','BNI','Mandiri','BSI','CIMB Niaga','Danamon','Permata','BTN','Maybank','OCBC NISP','Bukopin','Lainnya'] as $bank)
+                            <option value="{{ $bank }}" {{ old('bank_nama', $karyawan->bank_nama) == $bank ? 'selected' : '' }}>{{ $bank }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>No. Rekening</label>
+                        <input type="text" name="bank_no_rekening" class="form-control" maxlength="30"
+                               value="{{ old('bank_no_rekening', $karyawan->bank_no_rekening) }}" placeholder="Nomor rekening">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Atas Nama</label>
+                        <input type="text" name="bank_atas_nama" class="form-control" maxlength="100"
+                               value="{{ old('bank_atas_nama', $karyawan->bank_atas_nama) }}" placeholder="Nama pemilik rekening">
+                    </div>
+                </div>
             </div>
 
             {{-- ===== FOTO WAJAH SECTION ===== --}}
@@ -172,19 +339,58 @@
             </div>
             {{-- ===== END FOTO SECTION ===== --}}
 
-            <div style="display:flex; gap:10px;">
+            {{-- ===== DOKUMEN IDENTITAS / LEGAL ===== --}}
+            <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:20px 22px;margin-top:20px;">
+                <div style="font-weight:700;font-size:14px;color:#2d3748;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f0fff4;">
+                    <i class="fas fa-id-card" style="color:#276749;margin-right:8px;"></i>Dokumen Identitas & BPJS
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#4a5568;">NIK / KTP</label>
+                        <input type="text" name="doc_nik" class="form-control" maxlength="20"
+                               value="{{ old('doc_nik', $karyawan->legaldoc?->nik ?? '') }}"
+                               placeholder="16 digit NIK KTP">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#4a5568;">No. Kartu Keluarga (KK)</label>
+                        <input type="text" name="doc_kk" class="form-control" maxlength="20"
+                               value="{{ old('doc_kk', $karyawan->legaldoc?->kk ?? '') }}"
+                               placeholder="16 digit No. KK">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#4a5568;">NPWP</label>
+                        <input type="text" name="doc_npwp" class="form-control" maxlength="30"
+                               value="{{ old('doc_npwp', $karyawan->legaldoc?->npwp ?? '') }}"
+                               placeholder="XX.XXX.XXX.X-XXX.XXX">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#4a5568;">BPJS Ketenagakerjaan (TK)</label>
+                        <input type="text" name="doc_bpjs_tk" class="form-control" maxlength="30"
+                               value="{{ old('doc_bpjs_tk', $karyawan->legaldoc?->bpjs_tk ?? '') }}"
+                               placeholder="No. BPJS TK">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:12px;font-weight:600;color:#4a5568;">BPJS Kesehatan</label>
+                        <input type="text" name="doc_bpjs_kesehatan" class="form-control" maxlength="30"
+                               value="{{ old('doc_bpjs_kesehatan', $karyawan->legaldoc?->bpjs_kesehatan ?? '') }}"
+                               placeholder="No. BPJS Kesehatan">
+                    </div>
+                </div>
+            </div>
+            {{-- ===== END DOKUMEN IDENTITAS ===== --}}
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Karyawan</button>
                 <a href="{{ route('admin.karyawan.index') }}" class="btn btn-secondary">Batal</a>
             </div>
         </form>
     </div>
 </div>
-@endsection
-
 @push('scripts')
 <script>
 let stream = null;
 let activeTab = 'kamera';
+
 
 // Jika ada foto lama, default ke "tetap"
 @if($karyawan->foto_wajah)
@@ -275,6 +481,17 @@ function ulangiKamera() {
     bukaKamera();
 }
 
+function filterDivisi() {
+    const deptId = document.getElementById('dept_select').value;
+    const sel    = document.getElementById('divisi_select');
+    Array.from(sel.options).forEach(function(opt) {
+        if (!opt.value) return;
+        opt.hidden = deptId && opt.dataset.dept !== deptId;
+    });
+    if (sel.value && sel.options[sel.selectedIndex].hidden) sel.value = '';
+}
+document.addEventListener('DOMContentLoaded', filterDivisi);
+
 function previewUpload(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -288,3 +505,5 @@ function previewUpload(input) {
 }
 </script>
 @endpush
+@endsection
+

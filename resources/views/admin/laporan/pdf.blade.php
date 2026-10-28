@@ -23,7 +23,7 @@
 <body>
     <div class="header">
         <h2>LAPORAN ABSENSI KARYAWAN</h2>
-        <p>PT Global Multi Pharmalab | Periode: {{ \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y') }}</p>
+        <p>{{ $namaPerusahaan ?? 'PT Global Multi Pharmalab' }} | Periode: {{ \Carbon\Carbon::create($tahun, $bulan)->translatedFormat('F Y') }}</p>
         <p>Dicetak: {{ now()->format('d/m/Y H:i') }}</p>
     </div>
 
@@ -32,7 +32,7 @@
             <tr>
                 <th>No</th>
                 <th>Tanggal</th>
-                <th>NIK</th>
+                <th>ID Karyawan</th>
                 <th>Nama</th>
                 <th>Departemen</th>
                 <th>Shift</th>
@@ -46,10 +46,10 @@
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ \Carbon\Carbon::parse($a->tanggal)->format('d/m/Y') }}</td>
-                <td>{{ $a->karyawan->nik ?? '-' }}</td>
-                <td>{{ $a->karyawan->nama ?? '-' }}</td>
-                <td>{{ $a->karyawan->departemen ?? '-' }}</td>
-                <td>{{ $a->shift->nama_shift ?? '-' }}</td>
+                <td>{{ $a->karyawan?->nik ?? '-' }}</td>
+                <td>{{ $a->karyawan?->nama ?? '-' }}</td>
+                <td>{{ $a->karyawan?->department?->name ?? $a->karyawan?->departemen ?? '-' }}</td>
+                <td>{{ $a->shift?->nama_shift ?? '-' }}</td>
                 <td>{{ $a->jam_masuk ?? '-' }}</td>
                 <td>{{ $a->jam_keluar ?? '-' }}</td>
                 <td><span class="badge {{ $a->status }}">{{ strtoupper($a->status) }}</span></td>

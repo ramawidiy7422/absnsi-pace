@@ -12,13 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role'       => \App\Http\Middleware\CheckRole::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+            'admin.only'    => \App\Http\Middleware\AdminOnly::class,
+            'karyawan.only' => \App\Http\Middleware\KaryawanOnly::class,
         ]);
         // Kiosk scan endpoint tidak butuh CSRF (sudah pakai header X-CSRF-TOKEN dari JS)
         // Tapi jika kiosk buka lama (token expired), exclude agar tidak 419
         $middleware->validateCsrfTokens(except: [
             'kiosk/scan',
             'kiosk/scan-qr',
+            'kiosk/fmk',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

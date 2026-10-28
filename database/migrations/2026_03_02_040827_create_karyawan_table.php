@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('departemen');
             $table->string('jabatan');
             $table->enum('jenis_kelamin', ['L', 'P']);
-            $table->string('no_hp', 15)->nullable();
+            $table->string('no_hp', 20)->nullable();
             $table->text('alamat')->nullable();
             $table->date('tanggal_masuk');
             $table->string('foto_wajah')->nullable();

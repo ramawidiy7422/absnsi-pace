@@ -22,7 +22,7 @@
                     <option value="">Pilih Karyawan...</option>
                     @foreach($karyawan as $k)
                         <option value="{{ $k->id }}" {{ old('karyawan_id') == $k->id ? 'selected' : '' }}>
-                            {{ $k->nik }} - {{ $k->nama }} ({{ $k->departemen }})
+                            {{ $k->nik }} - {{ $k->nama }} ({{ $k->department?->name ?? $k->departemen }})
                         </option>
                     @endforeach
                 </select>
@@ -53,10 +53,38 @@
             </div>
             <div class="form-group">
                 <label>Keterangan</label>
-                <textarea name="keterangan" class="form-control" rows="3" placeholder="Opsional...">{{ old('keterangan') }}</textarea>
+                <textarea name="keterangan" class="form-control" rows="2" placeholder="Opsional...">{{ old('keterangan') }}</textarea>
+            </div>
+            <div class="form-group" id="box-keterangan-terlambat" style="display:none;">
+                <label style="color:#c05621;font-weight:600;">
+                    <i class="fas fa-clock"></i> Alasan Keterlambatan
+                    <small style="font-weight:400;color:#718096;"> (opsional)</small>
+                </label>
+                <textarea name="keterangan_terlambat" class="form-control" rows="2"
+                    placeholder="Contoh: Kemacetan, ban bocor, urusan keluarga mendesak..."
+                    >{{ old('keterangan_terlambat') }}</textarea>
+                <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:11px;color:#718096;">Alasan umum:</span>
+                    @foreach(['Kemacetan','Ban bocor','Hujan deras','Urusan keluarga','Kendaraan mogok','Sakit mendadak'] as $alasan)
+                    <button type="button" onclick="setAlasan('{{ $alasan }}')"
+                        style="font-size:11px;padding:2px 8px;border:1px solid #e2e8f0;border-radius:5px;background:#f7fafc;cursor:pointer;color:#4a5568;">
+                        {{ $alasan }}
+                    </button>
+                    @endforeach
+                </div>
             </div>
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Absensi</button>
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+document.querySelector('select[name=status]').addEventListener('change', function() {
+    document.getElementById('box-keterangan-terlambat').style.display = this.value === 'terlambat' ? '' : 'none';
+});
+function setAlasan(text) {
+    document.querySelector('textarea[name=keterangan_terlambat]').value = text;
+}
+</script>
+@endpush
 @endsection

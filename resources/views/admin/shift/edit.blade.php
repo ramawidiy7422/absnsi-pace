@@ -23,11 +23,11 @@
             <div class="grid-2">
                 <div class="form-group">
                     <label>Jam Masuk *</label>
-                    <input type="time" name="jam_masuk" class="form-control" value="{{ old('jam_masuk', $shift->jam_masuk) }}" required>
+                    <input type="time" name="jam_masuk" class="form-control" value="{{ old('jam_masuk', substr($shift->jam_masuk, 0, 5)) }}" required>
                 </div>
                 <div class="form-group">
                     <label>Jam Keluar *</label>
-                    <input type="time" name="jam_keluar" class="form-control" value="{{ old('jam_keluar', $shift->jam_keluar) }}" required>
+                    <input type="time" name="jam_keluar" class="form-control" value="{{ old('jam_keluar', substr($shift->jam_keluar, 0, 5)) }}" required>
                 </div>
             </div>
             <div class="form-group">

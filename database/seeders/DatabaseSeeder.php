@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ShiftSeeder::class,
             AdminSeeder::class,
+            MasterDataSeeder::class,
         ]);
     }
 }

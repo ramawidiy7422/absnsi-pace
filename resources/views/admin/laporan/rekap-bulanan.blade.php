@@ -55,6 +55,7 @@
     .val-izin      { color: #2c5282; font-weight: 700; }
     .val-sakit     { color: #97266d; font-weight: 700; }
     .val-alpha     { color: #c53030; font-weight: 700; }
+    .val-cuti      { color: #276749; font-weight: 700; }
     .val-zero      { color: #cbd5e0; }
 
     /* Rate bar mini */
@@ -80,7 +81,7 @@
         <h4><i class="fas fa-calendar-check"></i> Rekap Bulanan Karyawan</h4>
         <p>
             {{ \Carbon\Carbon::createFromDate($tahun, $bulan, 1)->translatedFormat('F Y') }}
-            @if($departemen) &mdash; Departemen: {{ $departemen }} @endif
+            @if($department_id) &mdash; Departemen: {{ $departemenList->firstWhere('id', $department_id)?->name }} @endif
         </p>
     </div>
     <div style="display:flex; gap:8px;">
@@ -90,8 +91,14 @@
         <a href="{{ route('admin.laporan.export-pdf') }}?bulan={{ $bulan }}&tahun={{ $tahun }}" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);">
             <i class="fas fa-file-pdf"></i> Export PDF
         </a>
+        <a href="{{ route('admin.laporan.export-rekap-pdf') }}?bulan={{ $bulan }}&tahun={{ $tahun }}{{ $department_id ? '&department_id='.$department_id : '' }}" class="btn btn-sm" style="background:rgba(220,53,69,0.7);color:white;border:1px solid rgba(255,255,255,0.4);">
+            <i class="fas fa-file-pdf"></i> Rekap PDF
+        </a>
         <a href="{{ route('admin.laporan.export-excel') }}?bulan={{ $bulan }}&tahun={{ $tahun }}" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);">
-            <i class="fas fa-file-excel"></i> Export Excel
+            <i class="fas fa-file-excel"></i> Excel Detail
+        </a>
+        <a href="{{ route('admin.laporan.rekap-bulanan.export-excel') }}?bulan={{ $bulan }}&tahun={{ $tahun }}{{ isset($department_id) && $department_id ? '&departemen_id='.$department_id : '' }}" class="btn btn-sm" style="background:rgba(39,103,73,0.8);color:white;border:1px solid rgba(255,255,255,0.4);">
+            <i class="fas fa-file-excel"></i> Rekap Excel
         </a>
     </div>
 </div>
@@ -119,10 +126,10 @@
         </div>
         <div class="fg">
             <label>Departemen</label>
-            <select name="departemen">
+            <select name="department_id">
                 <option value="">Semua Departemen</option>
                 @foreach($departemenList as $dept)
-                    <option value="{{ $dept }}" {{ $dept == $departemen ? 'selected' : '' }}>{{ $dept }}</option>
+                    <option value="{{ $dept->id }}" {{ $dept->id == $department_id ? 'selected' : '' }}>{{ $dept->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -138,6 +145,7 @@
     $sumIzin      = $rekap->sum('izin');
     $sumSakit     = $rekap->sum('sakit');
     $sumAlpha     = $rekap->sum('alpha');
+    $sumCuti      = $rekap->sum('cuti');
     $sumTotal     = $rekap->sum('total');
 @endphp
 <div class="summary-grid">
@@ -160,6 +168,10 @@
     <div class="summary-item">
         <div class="sv" style="color:#c53030;">{{ $sumAlpha }}</div>
         <div class="sl"><i class="fas fa-times-circle" style="color:#fc8181;"></i> Total Alpha</div>
+    </div>
+    <div class="summary-item">
+        <div class="sv" style="color:#276749;">{{ $sumCuti }}</div>
+        <div class="sl"><i class="fas fa-calendar-check" style="color:#48bb78;"></i> Total Cuti (hari)</div>
     </div>
 </div>
 
@@ -184,6 +196,7 @@
                     <th style="color:#2c5282;"><i class="fas fa-calendar-minus"></i> Izin</th>
                     <th style="color:#97266d;"><i class="fas fa-heartbeat"></i> Sakit</th>
                     <th style="color:#c53030;"><i class="fas fa-times-circle"></i> Alpha</th>
+                    <th style="color:#276749;"><i class="fas fa-calendar-check"></i> Cuti</th>
                     <th>Total</th>
                     <th>Kehadiran</th>
                     <th>Slip</th>
@@ -192,10 +205,10 @@
             <tbody>
                 @php $prevDept = null; $no = 1; @endphp
                 @foreach($rekap as $r)
-                    @php $dept = $r['karyawan']->departemen; @endphp
+                    @php $dept = $r['karyawan']->department?->name ?? $r['karyawan']->departemen; @endphp
                     @if($dept !== $prevDept)
                         <tr class="dept-row">
-                            <td colspan="11"><i class="fas fa-building"></i> {{ $dept }}</td>
+                            <td colspan="12"><i class="fas fa-building"></i> {{ $dept }}</td>
                         </tr>
                         @php $prevDept = $dept; @endphp
                     @endif
@@ -224,12 +237,13 @@
                                 </div>
                             </div>
                         </td>
-                        <td style="font-size:11px; color:#718096;">{{ $r['karyawan']->shift->nama_shift ?? '-' }}</td>
+                        <td style="font-size:11px; color:#718096;">{{ $r['karyawan']->shift?->nama_shift ?? '-' }}</td>
                         <td class="{{ $r['hadir'] > 0 ? 'val-hadir' : 'val-zero' }}">{{ $r['hadir'] ?: '-' }}</td>
                         <td class="{{ $r['terlambat'] > 0 ? 'val-terlambat' : 'val-zero' }}">{{ $r['terlambat'] ?: '-' }}</td>
                         <td class="{{ $r['izin'] > 0 ? 'val-izin' : 'val-zero' }}">{{ $r['izin'] ?: '-' }}</td>
                         <td class="{{ $r['sakit'] > 0 ? 'val-sakit' : 'val-zero' }}">{{ $r['sakit'] ?: '-' }}</td>
                         <td class="{{ $r['alpha'] > 0 ? 'val-alpha' : 'val-zero' }}">{{ $r['alpha'] ?: '-' }}</td>
+                        <td class="{{ ($r['cuti'] ?? 0) > 0 ? 'val-hadir' : 'val-zero' }}">{{ ($r['cuti'] ?? 0) ?: '-' }}</td>
                         <td style="font-weight:600; color:#2d3748;">{{ $totalRow ?: '-' }}</td>
                         <td>
                             <div style="display:flex; align-items:center; gap:8px;">

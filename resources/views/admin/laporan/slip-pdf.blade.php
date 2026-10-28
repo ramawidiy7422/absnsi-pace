@@ -7,15 +7,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #2d3748; background: #fff; }
 
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #1a1f36, #2d3561);
-            color: white;
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        table.header-table { width: 100%; background: #1a1f36; color: white; }
+        table.header-table td { padding: 20px 24px; color: white; }
         .header-logo { font-size: 16px; font-weight: 700; }
         .header-logo small { font-size: 10px; opacity: 0.7; display: block; margin-top: 2px; }
         .header-title { text-align: right; }
@@ -24,59 +17,31 @@
 
         .body { padding: 20px 24px; }
 
-        /* Info karyawan */
-        .karyawan-section {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            display: flex;
-            gap: 24px;
-        }
-        .kary-field { flex: 1; }
-        .kary-field label { font-size: 9px; text-transform: uppercase; color: #a0aec0; letter-spacing: 0.5px; display: block; }
-        .kary-field strong { font-size: 12px; color: #2d3748; }
+        table.karyawan-table { width: 100%; background: #f7fafc; border: 1px solid #e2e8f0; margin-bottom: 16px; }
+        table.karyawan-table td { padding: 12px 16px; }
+        .kary-label { font-size: 9px; text-transform: uppercase; color: #a0aec0; letter-spacing: 0.5px; display: block; }
+        .kary-value { font-size: 12px; color: #2d3748; font-weight: 700; }
 
-        /* Rekap summary */
-        .rekap-grid {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .rekap-box {
-            flex: 1;
-            text-align: center;
-            padding: 12px 8px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .rekap-box .val { font-size: 22px; font-weight: 800; line-height: 1; }
-        .rekap-box .lbl { font-size: 9px; color: #718096; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .rekap-box.hadir  { background: #f0fff4; border-color: #9ae6b4; } .rekap-box.hadir .val  { color: #276749; }
-        .rekap-box.tlmbt  { background: #fffaf0; border-color: #fbd38d; } .rekap-box.tlmbt .val  { color: #c05621; }
-        .rekap-box.izin   { background: #ebf8ff; border-color: #90cdf4; } .rekap-box.izin .val   { color: #2b6cb0; }
-        .rekap-box.sakit  { background: #fff5f5; border-color: #fed7d7; } .rekap-box.sakit .val  { color: #c53030; }
-        .rekap-box.alpha  { background: #fff5f5; border-color: #fed7d7; } .rekap-box.alpha .val  { color: #c53030; }
-        .rekap-box.persen { background: #faf5ff; border-color: #d6bcfa; } .rekap-box.persen .val { color: #6b46c1; }
+        table.rekap-table { width: 100%; border-collapse: separate; border-spacing: 6px; margin-bottom: 16px; }
+        .rekap-box { text-align: center; padding: 12px 8px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .r-val { font-size: 22px; font-weight: 800; line-height: 1; }
+        .r-lbl { font-size: 9px; color: #718096; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .r-hadir  { background: #f0fff4; border-color: #9ae6b4; } .r-hadir .r-val  { color: #276749; }
+        .r-tlmbt  { background: #fffaf0; border-color: #fbd38d; } .r-tlmbt .r-val  { color: #c05621; }
+        .r-izin   { background: #ebf8ff; border-color: #90cdf4; } .r-izin .r-val   { color: #2b6cb0; }
+        .r-sakit  { background: #fff5f5; border-color: #fed7d7; } .r-sakit .r-val  { color: #c53030; }
+        .r-alpha  { background: #fff5f5; border-color: #fed7d7; } .r-alpha .r-val  { color: #c53030; }
+        .r-persen { background: #faf5ff; border-color: #d6bcfa; } .r-persen .r-val { color: #6b46c1; }
 
-        /* Progress bar */
-        .progress-wrap { background: #e2e8f0; border-radius: 6px; height: 8px; overflow: hidden; margin: 4px 0 8px; }
-        .progress-fill { height: 100%; border-radius: 6px;
-            background: {{ $rekap['persen'] >= 90 ? '#48bb78' : ($rekap['persen'] >= 70 ? '#ed8936' : '#fc8181') }}; }
+        .bar-outer { display: block; background: #e2e8f0; border-radius: 6px; height: 8px; margin: 4px 0 8px; }
+        .bar-inner { display: block; height: 8px; border-radius: 6px; }
 
-        /* Tabel detail */
-        table { width: 100%; border-collapse: collapse; font-size: 10px; }
-        thead th {
-            background: #1a1f36; color: #a0aec0;
-            padding: 7px 10px; text-align: left;
-            font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        tbody td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
-        tbody tr:nth-child(even) { background: #f7fafc; }
-        tbody tr:last-child td { border-bottom: none; }
+        table.data { width: 100%; border-collapse: collapse; font-size: 10px; }
+        table.data thead th { background: #1a1f36; color: #a0aec0; padding: 7px 10px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+        table.data tbody td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+        table.data tbody tr:nth-child(even) { background: #f7fafc; }
+        table.data tbody tr:last-child td { border-bottom: none; }
 
-        /* Status badge */
         .status { padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: 700; }
         .s-hadir     { background: #c6f6d5; color: #276749; }
         .s-terlambat { background: #feebc8; color: #c05621; }
@@ -84,112 +49,107 @@
         .s-sakit     { background: #fed7e2; color: #97266d; }
         .s-alpha     { background: #fed7e2; color: #c53030; }
 
-        /* Footer */
-        .footer {
-            margin-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
+        .page-title-table { width: 100%; margin-bottom: 12px; border-bottom: 2px solid #4299e1; padding-bottom: 8px; }
+        .page-title-table td { font-size: 13px; font-weight: 700; color: #2d3748; }
         .footer-info { font-size: 9px; color: #a0aec0; }
-        .ttd-box { text-align: center; }
-        .ttd-box .garis { border-top: 1px solid #2d3748; width: 160px; margin: 40px auto 4px; }
-        .ttd-box small { font-size: 9px; color: #718096; }
-
-        .page-title {
-            font-size: 13px; font-weight: 700; color: #2d3748;
-            margin-bottom: 12px; padding-bottom: 8px;
-            border-bottom: 2px solid #4299e1;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .page-title span { font-size: 10px; color: #718096; font-weight: 400; }
     </style>
 </head>
 <body>
 
-{{-- Header --}}
-<div class="header">
-    <div class="header-logo">
-        PT Global Multi Pharmalab
-        <small>Sistem Absensi Digital</small>
-    </div>
-    <div class="header-title">
-        <h2>SLIP ABSENSI KARYAWAN</h2>
-        <span>Periode: {{ $namaBulan }}</span>
-    </div>
-</div>
+<table class="header-table" cellpadding="0" cellspacing="0">
+    <tr>
+        <td style="width:60%;">
+            <div class="header-logo">
+                {{ $namaPerusahaan ?? 'PT Global Multi Pharmalab' }}
+                <small>{{ $alamatPerusahaan ?? '' }}@if(!empty($kotaPerusahaan)) &bull; {{ $kotaPerusahaan }}@endif</small>
+                @if(!empty($noTelpPerusahaan))<small style="opacity:0.6;">Telp: {{ $noTelpPerusahaan }}</small>@endif
+            </div>
+        </td>
+        <td style="width:40%;">
+            <div class="header-title">
+                <h2>SLIP ABSENSI KARYAWAN</h2>
+                <span>Periode: {{ $namaBulan }}</span>
+            </div>
+        </td>
+    </tr>
+</table>
 
 <div class="body">
 
-    {{-- Judul --}}
-    <div class="page-title">
-        Data Absensi Detail
-        <span>Dicetak: {{ now()->translatedFormat('d F Y, H:i') }}</span>
-    </div>
+    <table class="page-title-table" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>Data Absensi Detail</td>
+            <td style="text-align:right;font-size:10px;color:#718096;font-weight:400;">Dicetak: {{ now()->translatedFormat('d F Y, H:i') }}</td>
+        </tr>
+    </table>
 
     {{-- Info Karyawan --}}
-    <div class="karyawan-section">
-        <div class="kary-field">
-            <label>Nama Karyawan</label>
-            <strong>{{ $karyawan->nama }}</strong>
-        </div>
-        <div class="kary-field">
-            <label>NIK</label>
-            <strong>{{ $karyawan->nik }}</strong>
-        </div>
-        <div class="kary-field">
-            <label>Departemen</label>
-            <strong>{{ $karyawan->departemen }}</strong>
-        </div>
-        <div class="kary-field">
-            <label>Jabatan</label>
-            <strong>{{ $karyawan->jabatan }}</strong>
-        </div>
-        <div class="kary-field">
-            <label>Shift</label>
-            <strong>{{ $karyawan->shift->nama_shift ?? '-' }}</strong>
-        </div>
-    </div>
+    <table class="karyawan-table" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="width:20%;">
+                <span class="kary-label">Nama Karyawan</span>
+                <span class="kary-value">{{ $karyawan->nama }}</span>
+            </td>
+            <td style="width:20%;">
+                <span class="kary-label">ID Karyawan</span>
+                <span class="kary-value">{{ $karyawan->nik }}</span>
+            </td>
+            <td style="width:20%;">
+                <span class="kary-label">Departemen</span>
+                <span class="kary-value">{{ $karyawan->department?->name ?? $karyawan->departemen }}</span>
+            </td>
+            <td style="width:20%;">
+                <span class="kary-label">Jabatan</span>
+                <span class="kary-value">{{ $karyawan->jabatan }}</span>
+            </td>
+            <td style="width:20%;">
+                <span class="kary-label">Shift</span>
+                <span class="kary-value">{{ $karyawan->shift?->nama_shift ?? '-' }}</span>
+            </td>
+        </tr>
+    </table>
 
     {{-- Rekap Ringkas --}}
-    <div class="rekap-grid">
-        <div class="rekap-box hadir">
-            <div class="val">{{ $rekap['hadir'] }}</div>
-            <div class="lbl">Hadir</div>
-        </div>
-        <div class="rekap-box tlmbt">
-            <div class="val">{{ $rekap['terlambat'] }}</div>
-            <div class="lbl">Terlambat</div>
-        </div>
-        <div class="rekap-box izin">
-            <div class="val">{{ $rekap['izin'] }}</div>
-            <div class="lbl">Izin</div>
-        </div>
-        <div class="rekap-box sakit">
-            <div class="val">{{ $rekap['sakit'] }}</div>
-            <div class="lbl">Sakit</div>
-        </div>
-        <div class="rekap-box alpha">
-            <div class="val">{{ $rekap['alpha'] }}</div>
-            <div class="lbl">Alpha</div>
-        </div>
-        <div class="rekap-box persen">
-            <div class="val">{{ $rekap['persen'] }}%</div>
-            <div class="lbl">Kehadiran</div>
-        </div>
-    </div>
+    <table class="rekap-table" cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="rekap-box r-hadir">
+                <div class="r-val">{{ $rekap['hadir'] }}</div>
+                <div class="r-lbl">Hadir</div>
+            </td>
+            <td class="rekap-box r-tlmbt">
+                <div class="r-val">{{ $rekap['terlambat'] }}</div>
+                <div class="r-lbl">Terlambat</div>
+            </td>
+            <td class="rekap-box r-izin">
+                <div class="r-val">{{ $rekap['izin'] }}</div>
+                <div class="r-lbl">Izin</div>
+            </td>
+            <td class="rekap-box r-sakit">
+                <div class="r-val">{{ $rekap['sakit'] }}</div>
+                <div class="r-lbl">Sakit</div>
+            </td>
+            <td class="rekap-box r-alpha">
+                <div class="r-val">{{ $rekap['alpha'] }}</div>
+                <div class="r-lbl">Alpha</div>
+            </td>
+            <td class="rekap-box r-persen">
+                <div class="r-val">{{ $rekap['persen'] }}%</div>
+                <div class="r-lbl">Kehadiran</div>
+            </td>
+        </tr>
+    </table>
 
     <div style="font-size:10px; color:#718096; margin-bottom:4px;">
         Kehadiran: {{ $rekap['hadir'] + $rekap['terlambat'] }} / {{ $rekap['hari_kerja'] }} hari kerja
     </div>
-    <div class="progress-wrap">
-        <div class="progress-fill" style="width: {{ $rekap['persen'] }}%;"></div>
-    </div>
+    @php
+        $barColor = $rekap['persen'] >= 90 ? '#48bb78' : ($rekap['persen'] >= 70 ? '#ed8936' : '#fc8181');
+        $barW = max(1, $rekap['persen']);
+    @endphp
+    <div class="bar-outer"><div class="bar-inner" style="width:{{ $barW }}%;background:{{ $barColor }};"></div></div>
 
     {{-- Tabel Detail --}}
-    <table>
+    <table class="data">
         <thead>
             <tr>
                 <th>#</th>
@@ -210,7 +170,7 @@
                 <td style="color:#a0aec0;">{{ $i+1 }}</td>
                 <td>{{ \Carbon\Carbon::parse($a->tanggal)->format('d/m/Y') }}</td>
                 <td>{{ \Carbon\Carbon::parse($a->tanggal)->translatedFormat('D') }}</td>
-                <td>{{ $a->shift->nama_shift ?? '-' }}</td>
+                <td>{{ $a->shift?->nama_shift ?? '-' }}</td>
                 <td>{{ $a->jam_masuk ?? '-' }}</td>
                 <td>{{ $a->jam_keluar ?? '-' }}</td>
                 <td>
@@ -223,7 +183,7 @@
                 <td>
                     <span class="status s-{{ $a->status }}">{{ ucfirst($a->status) }}</span>
                     @if($a->pulang_cepat)
-                        <span style="font-size:8px;color:#c53030;"> ⚠</span>
+                        <span style="font-size:8px;color:#c53030;"> !</span>
                     @endif
                 </td>
                 <td style="color:#718096;">
@@ -244,17 +204,50 @@
         </tbody>
     </table>
 
-    {{-- Footer --}}
-    <div class="footer">
-        <div class="footer-info">
-            <div>PT Global Multi Pharmalab &mdash; Sistem Absensi Digital</div>
-            <div style="margin-top:2px;">Dokumen ini digenerate secara otomatis oleh sistem</div>
-        </div>
-        <div class="ttd-box">
-            <div class="garis"></div>
-            <div>HRD / Manager</div>
-            <small>Tanda Tangan & Stempel</small>
-        </div>
+    {{-- Footer / Tanda Tangan --}}
+    <div style="margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+        <table style="width:100%;" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="width:60%;vertical-align:top;">
+                    <div class="footer-info">
+                        <div style="font-weight:700; color:#2d3748; font-size:10px;">{{ $namaPerusahaan ?? 'PT Global Multi Pharmalab' }}</div>
+                        @if(!empty($alamatPerusahaan))<div style="margin-top:1px;color:#4a5568;">{{ $alamatPerusahaan }}{{ !empty($kotaPerusahaan) ? ', '.$kotaPerusahaan : '' }}</div>@endif
+                        @if(!empty($noTelpPerusahaan))<div style="color:#718096;">Telp: {{ $noTelpPerusahaan }}</div>@endif
+                        @if(!empty($slipFooter))<div style="margin-top:4px;font-style:italic;color:#718096;">{{ $slipFooter }}</div>@endif
+                        <div style="margin-top:4px; color:#a0aec0;">Dicetak: {{ now()->translatedFormat('d F Y, H:i') }}</div>
+                    </div>
+                </td>
+                <td style="text-align:center;vertical-align:top;">
+                    <div style="font-size:10px; color:#4a5568; margin-bottom:4px; font-weight:600;">Mengetahui,</div>
+                    <div style="font-size:9px; color:#718096;">Pimpinan / Direktur</div>
+                    <div style="border-top: 1px solid #2d3748; width: 140px; margin: 48px auto 4px;"></div>
+                    <div style="font-size:9px; color:#4a5568; font-weight:600;">(...................................)</div>
+                </td>
+            </tr>
+        </table>
+
+        <table style="width:100%;margin-top:20px;" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="text-align:center;width:33%;">
+                    <div style="font-size:9px; color:#718096; margin-bottom:4px;">Karyawan Ybs,</div>
+                    <div style="font-size:9px; color:#718096; font-style:italic;">{{ $karyawan->nama }}</div>
+                    <div style="border-top: 1px solid #2d3748; width: 140px; margin: 48px auto 4px;"></div>
+                    <div style="font-size:9px; color:#4a5568; font-weight:600;">{{ $karyawan->nik }}</div>
+                </td>
+                <td style="text-align:center;width:33%;">
+                    <div style="font-size:9px; color:#718096; margin-bottom:4px;">Diperiksa oleh,</div>
+                    <div style="font-size:9px; color:#718096; font-style:italic;">Supervisor / Kepala Bagian</div>
+                    <div style="border-top: 1px solid #2d3748; width: 140px; margin: 48px auto 4px;"></div>
+                    <div style="font-size:9px; color:#4a5568; font-weight:600;">(...................................)</div>
+                </td>
+                <td style="text-align:center;width:33%;">
+                    <div style="font-size:9px; color:#718096; margin-bottom:4px;">Disetujui oleh,</div>
+                    <div style="font-size:9px; color:#718096; font-style:italic;">HRD Manager</div>
+                    <div style="border-top: 1px solid #2d3748; width: 140px; margin: 48px auto 4px;"></div>
+                    <div style="font-size:9px; color:#4a5568; font-weight:600;">(...................................)</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
 </div>

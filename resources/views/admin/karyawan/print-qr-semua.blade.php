@@ -128,7 +128,7 @@
 
     <div class="page-header">
         <h2>QR Code Absensi Karyawan</h2>
-        <p>Total {{ $qrList->count() }} karyawan aktif &mdash; PT Global Multi Pharmalab</p>
+        <p>Total {{ $qrList->count() }} karyawan aktif &mdash; {{ $namaPerusahaan }}</p>
     </div>
 
     <div class="cards-grid">
@@ -140,7 +140,7 @@
             </div>
             <div class="nama">{{ $item['karyawan']->nama }}</div>
             <div class="jabatan">{{ $item['karyawan']->jabatan }}</div>
-            <div class="departemen">{{ $item['karyawan']->departemen }}</div>
+            <div class="departemen">{{ $item['karyawan']->department?->name ?? $item['karyawan']->departemen }}</div>
             <hr class="divider">
             <div class="scan-hint">Scan di mesin absensi</div>
         </div>

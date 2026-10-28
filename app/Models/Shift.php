@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shift extends Model
 {
+    protected $table = 'shifts';
+
     protected $fillable = ['nama_shift', 'jam_masuk', 'jam_keluar', 'toleransi_menit', 'status'];
 
     public function karyawan()

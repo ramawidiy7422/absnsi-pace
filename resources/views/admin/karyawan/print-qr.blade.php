@@ -138,13 +138,13 @@
 
         <div class="nama">{{ $karyawan->nama }}</div>
         <div class="jabatan">{{ $karyawan->jabatan }}</div>
-        <div class="departemen">{{ $karyawan->departemen }}</div>
+        <div class="departemen">{{ $karyawan->department?->name ?? $karyawan->departemen }}</div>
 
         <hr class="divider">
 
         <div class="scan-hint">
             Tunjukkan QR Code ini di mesin absensi<br>
-            <strong>PT Global Multi Pharmalab</strong>
+            <strong>{{ $namaPerusahaan }}</strong>
         </div>
     </div>
 </body>

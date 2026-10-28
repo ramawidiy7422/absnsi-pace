@@ -11,7 +11,8 @@ class CheckRole
     {
         $user = $request->user();
 
-        if (!$user || !in_array($user->role, $roles)) {
+        // superadmin selalu lolos semua role check
+        if (!$user || (!in_array($user->role, $roles) && $user->role !== 'superadmin')) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Akses ditolak.'], 403);
             }

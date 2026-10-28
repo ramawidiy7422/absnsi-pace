@@ -1,0 +1,260 @@
+import sys
+import io
+import time
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import os
+import base64
+import numpy as np
+from PIL import Image
+from insightface.app import FaceAnalysis
+
+app = Flask(__name__)
+CORS(app)
+
+WAJAH_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wajah_karyawan')
+os.makedirs(WAJAH_DIR, exist_ok=True)
+
+# ── InsightFace: buffalo_sc = ringan + cepat, akurasi tinggi ──────────────────
+face_app = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider'])
+face_app.prepare(ctx_id=0, det_size=(320, 320))
+
+MODEL_NAME = 'InsightFace-ArcFace (buffalo_sc)'
+THRESHOLD  = 0.50   # cosine distance — lebih rendah = lebih mirip/strict
+_emb_cache = {}     # { nik: np.array }
+
+# Cooldown per-NIK: cegah scan ganda dalam waktu singkat
+# { nik: timestamp_float }
+COOLDOWN_DETIK = 1    # 1 detik untuk mode testing (produksi: 5 detik)
+_last_scan     = {}   # { nik: time.time() }
+
+
+def _load_image(b64_string):
+    if ',' in b64_string:
+        b64_string = b64_string.split(',')[1]
+    data = base64.b64decode(b64_string)
+    img  = Image.open(io.BytesIO(data)).convert('RGB')
+    return np.array(img)
+
+
+def _get_embedding(img_np):
+    """Detect wajah dan return (embedding, error_msg)."""
+    faces = face_app.get(img_np)
+    if not faces:
+        return None, 'Wajah tidak terdeteksi'
+    # Ambil wajah terbesar
+    face = sorted(faces, key=lambda f: (f.bbox[2]-f.bbox[0]) * (f.bbox[3]-f.bbox[1]), reverse=True)[0]
+    return face.normed_embedding, None  # sudah L2-normalized
+
+
+def _cosine_distance(a, b):
+    return float(1 - np.dot(a, b))
+
+
+def _load_all_embeddings():
+    """Load semua .npy embedding ke memory cache."""
+    global _emb_cache
+    _emb_cache = {}
+    for fname in os.listdir(WAJAH_DIR):
+        if not fname.endswith('.npy'):
+            continue
+        nik  = fname.replace('.npy', '')
+        path = os.path.join(WAJAH_DIR, fname)
+        try:
+            _emb_cache[nik] = np.load(path)
+        except Exception as e:
+            print(f"Gagal load {nik}: {e}")
+
+
+# Load saat startup
+_load_all_embeddings()
+print(f"Model  : {MODEL_NAME}")
+print(f"Threshold: {THRESHOLD}")
+print(f"Terdaftar: {len(_emb_cache)} wajah")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        'status'   : 'ok',
+        'message'  : 'Face Recognition Service aktif',
+        'model'    : MODEL_NAME,
+        'terdaftar': len(_emb_cache),
+    })
+
+
+@app.route('/reload', methods=['POST'])
+def reload_embeddings():
+    """Reload semua embedding dari disk tanpa restart service."""
+    before = len(_emb_cache)
+    _load_all_embeddings()
+    after = len(_emb_cache)
+    return jsonify({
+        'success'  : True,
+        'message'  : f'Cache diperbarui: {before} → {after} wajah terdaftar',
+        'terdaftar': after,
+    })
+
+
+@app.route('/daftarkan', methods=['POST'])
+def daftarkan_wajah():
+    data     = request.get_json()
+    nik      = data.get('nik')
+    foto_b64 = data.get('foto')
+
+    if not nik or not foto_b64:
+        return jsonify({'success': False, 'message': 'NIK dan foto wajib diisi'}), 400
+
+    try:
+        img_np      = _load_image(foto_b64)
+        emb, errmsg = _get_embedding(img_np)
+
+        if emb is None:
+            return jsonify({'success': False, 'message': errmsg}), 400
+
+        # Simpan embedding (.npy) + foto referensi (.jpg)
+        np.save(os.path.join(WAJAH_DIR, f"{nik}.npy"), emb)
+        Image.fromarray(img_np).save(os.path.join(WAJAH_DIR, f"{nik}.jpg"))
+        _emb_cache[nik] = emb
+
+        return jsonify({'success': True, 'message': f'Wajah NIK {nik} berhasil didaftarkan'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Gagal daftarkan: {str(e)}'}), 400
+
+
+@app.route('/kenali', methods=['POST'])
+def kenali_wajah():
+    data     = request.get_json()
+    foto_b64 = data.get('foto')
+
+    if not foto_b64:
+        return jsonify({'success': False, 'message': 'Foto tidak diberikan'}), 400
+
+    if not _emb_cache:
+        return jsonify({'success': False, 'message': 'Belum ada karyawan terdaftar'}), 404
+
+    try:
+        img_np      = _load_image(foto_b64)
+        emb, errmsg = _get_embedding(img_np)
+
+        if emb is None:
+            return jsonify({'success': False, 'message': 'Wajah tidak terdeteksi. Hadapkan wajah ke kamera.'}), 400
+
+        # Kumpulkan semua kandidat yang cocok (dist <= THRESHOLD), urutkan terbaik
+        now_ts     = time.time()
+        kandidat   = []
+        dist_log   = 1.0
+
+        for nik, ref_emb in _emb_cache.items():
+            dist = _cosine_distance(emb, ref_emb)
+            if dist < dist_log:
+                dist_log = dist
+            if dist <= THRESHOLD:
+                kandidat.append((dist, nik))
+
+        # Urutkan dari jarak terkecil (paling mirip)
+        kandidat.sort(key=lambda x: x[0])
+
+        if not kandidat:
+            return jsonify({'success': False, 'message': f'Wajah tidak dikenali. Jarak terbaik: {dist_log:.3f} (threshold: {THRESHOLD}). Coba lagi.', 'dist': round(float(dist_log),4), 'threshold': THRESHOLD})
+
+        # Pilih kandidat yang TIDAK sedang cooldown
+        dipilih_nik  = None
+        dipilih_dist = 1.0
+        for dist, nik in kandidat:
+            sisa = COOLDOWN_DETIK - (now_ts - _last_scan.get(nik, 0))
+            if sisa <= 0:
+                dipilih_nik  = nik
+                dipilih_dist = dist
+                break  # ambil yang paling mirip dan tidak cooldown
+
+        # Semua kandidat sedang cooldown — return NIK terbaik dengan info cooldown
+        if dipilih_nik is None:
+            nik_terbaik = kandidat[0][1]
+            sisa = COOLDOWN_DETIK - (now_ts - _last_scan.get(nik_terbaik, 0))
+            print(f"  => SEMUA COOLDOWN, terbaik: {nik_terbaik} sisa {sisa:.1f}s")
+            return jsonify({
+                'success'   : False,
+                'cooldown'  : True,
+                'sisa_detik': max(1, int(sisa)),
+                'nik'       : nik_terbaik,
+                'message'   : f'Harap tunggu {max(1,int(sisa))} detik sebelum scan ulang.'
+            }), 429
+
+        confidence = round((1 - dipilih_dist / THRESHOLD) * 50 + 50, 1)
+        confidence = min(99.9, max(50.0, confidence))
+        _last_scan[dipilih_nik] = now_ts
+        print(f"  => COCOK: {dipilih_nik} dist={dipilih_dist:.3f} conf={confidence}% (dari {len(kandidat)} kandidat)")
+        return jsonify({
+            'success'   : True,
+            'nik'       : dipilih_nik,
+            'confidence': confidence,
+            'message'   : f"Wajah dikenali: {dipilih_nik} ({confidence}%)"
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error sistem: {str(e)}'}), 500
+
+
+@app.route('/migrasi', methods=['POST'])
+def migrasi_embeddings():
+    """Buat .npy dari .jpg lama (migrasi dari model Facenet ke InsightFace)."""
+    berhasil, gagal = [], []
+
+    for fname in os.listdir(WAJAH_DIR):
+        if not fname.endswith('.jpg'):
+            continue
+        nik      = fname.replace('.jpg', '')
+        npy_path = os.path.join(WAJAH_DIR, f"{nik}.npy")
+
+        if os.path.exists(npy_path):
+            berhasil.append(nik)
+            continue
+
+        try:
+            img_np      = np.array(Image.open(os.path.join(WAJAH_DIR, fname)).convert('RGB'))
+            emb, errmsg = _get_embedding(img_np)
+            if emb is None:
+                gagal.append({'nik': nik, 'alasan': errmsg})
+                continue
+            np.save(npy_path, emb)
+            _emb_cache[nik] = emb
+            berhasil.append(nik)
+        except Exception as e:
+            gagal.append({'nik': nik, 'alasan': str(e)})
+
+    return jsonify({'success': True, 'berhasil': berhasil, 'gagal': gagal, 'total': len(_emb_cache)})
+
+
+@app.route('/hapus/<nik>', methods=['DELETE'])
+def hapus_wajah(nik):
+    dihapus = False
+    for ext in ['.jpg', '.npy']:
+        path = os.path.join(WAJAH_DIR, f"{nik}{ext}")
+        if os.path.exists(path):
+            os.remove(path)
+            dihapus = True
+    if nik in _emb_cache:
+        del _emb_cache[nik]
+        dihapus = True
+
+    if dihapus:
+        return jsonify({'success': True, 'message': f'Wajah NIK {nik} dihapus'})
+    return jsonify({'success': False, 'message': 'Data wajah tidak ditemukan'}), 404
+
+
+@app.route('/list', methods=['GET'])
+def list_wajah():
+    niks = list(_emb_cache.keys())
+    return jsonify({'success': True, 'terdaftar': niks, 'total': len(niks)})
+
+
+if __name__ == '__main__':
+    print(f"Folder wajah: {WAJAH_DIR}")
+    app.run(host='0.0.0.0', port=5000, debug=False)
